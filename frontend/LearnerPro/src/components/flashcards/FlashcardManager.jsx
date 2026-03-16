@@ -7,7 +7,7 @@ import flashcardService from "../../services/flashcardService"
 import aiService from '../../services/aiService'
 import Spinner from '../common/Spinner'
 import Modal from '../common/Modal'
-import Flashcard from './flashcard'
+import Flashcard from './Flashcard'
 import { useSearchParams } from 'react-router-dom'
 
 const FlashcardManager = ({documentId}) => {
