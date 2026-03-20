@@ -1,6 +1,7 @@
 import React, { useState, useEffect} from 'react'
 import { useParams, Link } from 'react-router-dom'
 import documentService from '../../services/documentService'
+import { BASE_URL } from '../../utils/apiPaths'
 import Spinner from '../../components/common/Spinner'
 import toast from 'react-hot-toast'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
@@ -42,17 +43,18 @@ const DocumentDetailPage = () => {
       return filePath
     }
 
-    const configuredApiUrl = (import.meta && import.meta.env && import.meta.env.VITE_API_URL) || (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) || 'http://localhost:8000';
-
-    let backendOrigin = 'http://localhost:8000';
-    try {
-      const parsed = new URL(configuredApiUrl);
-      backendOrigin = `${parsed.protocol}//${parsed.host}`;
-    } catch {
-      backendOrigin = configuredApiUrl.replace(/\/api\/?$/, '');
+    let backendOrigin = BASE_URL || '';
+    if (!backendOrigin) {
+      try {
+        backendOrigin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+      } catch (e) {
+        backendOrigin = '';
+      }
     }
 
-    return `${backendOrigin}${filePath.startsWith('/') ? '' : '/'}${filePath}`
+    // Ensure we don't duplicate slashes when joining
+    const sep = filePath.startsWith('/') ? '' : '/';
+    return `${backendOrigin}${sep}${filePath}`;
   };
 
   const renderContent = () => {
