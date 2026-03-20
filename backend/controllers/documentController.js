@@ -202,19 +202,41 @@ export const deleteDocument = async (req, res, next) => {
             });
         }
 
-        await fs.unlink(document.filePath).catch(() => {});
+        // Delete the file from the filesystem
+        if (document.filePath) {
+            await fs.unlink(document.filePath).catch((err) => {
+                console.warn(`Warning: Could not delete file ${document.filePath}:`, err.message);
+            });
+        }
 
-    // remove related flashcards and quizzes for this document
-    await Flashcard.deleteMany({ DocumentId: document._id, userId: req.user._id }).catch(() => {});
-    await Quiz.deleteMany({ documentId: document._id, userId: req.user._id }).catch(() => {});
+        // Remove related flashcards and quizzes for this document
+        try {
+            await Flashcard.deleteMany({ 
+                DocumentId: document._id, 
+                userId: req.user._id 
+            });
+        } catch (err) {
+            console.error('Error deleting flashcards:', err);
+        }
 
-    await document.deleteOne();
+        try {
+            await Quiz.deleteMany({ 
+                documentId: document._id, 
+                userId: req.user._id 
+            });
+        } catch (err) {
+            console.error('Error deleting quizzes:', err);
+        }
+
+        // Delete the document from database
+        await document.deleteOne();
 
         res.status(200).json({
             success: true,
             message: 'Document deleted successfully'
         });
     } catch (error) {
-        next(error)
+        console.error('Delete document error:', error);
+        next(error);
     }
 };
