@@ -1,4 +1,6 @@
 import mongoose from 'mongoose';
+import Quiz from './Quiz.js';
+import Flashcard from './Flashcard.js';
 
 const documentSchema = new mongoose.Schema({
     userId: {
@@ -59,6 +61,33 @@ const documentSchema = new mongoose.Schema({
 });
 
 documentSchema.index({ userId: 1, uploadDate: -1 });
+
+documentSchema.pre('findOneAndDelete', async function(next) {
+    try {
+        // `this` is the query. Find the document being deleted so we have its _id.
+        const doc = await this.model.findOne(this.getQuery());
+        if (doc) {
+            await Quiz.deleteMany({ documentId: doc._id });
+            await Flashcard.deleteMany({ DocumentId: doc._id });
+        }
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
+
+documentSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+    try {
+        const doc = this;
+        if (doc && doc._id) {
+            await Quiz.deleteMany({ documentId: doc._id });
+            await Flashcard.deleteMany({ DocumentId: doc._id });
+        }
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
 
 const Document = mongoose.model('Document', documentSchema);
 
