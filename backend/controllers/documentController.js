@@ -204,31 +204,16 @@ export const deleteDocument = async (req, res, next) => {
 
         // Delete the file from the filesystem
         if (document.filePath) {
-            await fs.unlink(document.filePath).catch((err) => {
+            try {
+                await fs.unlink(document.filePath);
+                console.log(`Deleted file: ${document.filePath}`);
+            } catch (err) {
                 console.warn(`Warning: Could not delete file ${document.filePath}:`, err.message);
-            });
+                // Don't fail the operation if file can't be deleted
+            }
         }
 
-        // Remove related flashcards and quizzes for this document
-        try {
-            await Flashcard.deleteMany({ 
-                DocumentId: document._id, 
-                userId: req.user._id 
-            });
-        } catch (err) {
-            console.error('Error deleting flashcards:', err);
-        }
-
-        try {
-            await Quiz.deleteMany({ 
-                documentId: document._id, 
-                userId: req.user._id 
-            });
-        } catch (err) {
-            console.error('Error deleting quizzes:', err);
-        }
-
-        // Delete the document from database
+        // Delete the document - the pre-hook will handle cascading deletes
         await document.deleteOne();
 
         res.status(200).json({
