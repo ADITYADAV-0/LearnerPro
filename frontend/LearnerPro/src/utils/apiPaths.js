@@ -1,4 +1,19 @@
-export const BASE_URL = import.meta.env.MODE === "development" ? 'http://localhost:8000' : "";
+let _baseUrl = '';
+const configured = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '';
+if (configured) {
+    _baseUrl = configured.replace(/\/$/, '');
+} else if (import.meta.env.MODE === 'development') {
+    _baseUrl = 'http://localhost:8000';
+} else {
+    // fallback to window.location.origin when running in browser (production)
+    try {
+        _baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+    } catch (e) {
+        _baseUrl = '';
+    }
+}
+
+export const BASE_URL = _baseUrl;
 
 export const API_PATH = {
     AUTH: {
