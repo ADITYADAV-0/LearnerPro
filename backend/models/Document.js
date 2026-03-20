@@ -62,36 +62,4 @@ const documentSchema = new mongoose.Schema({
 
 documentSchema.index({ userId: 1, uploadDate: -1 });
 
-// Pre-hook for findOneAndDelete
-documentSchema.pre('findOneAndDelete', async function(next) {
-    try {
-        const doc = await this.model.findOne(this.getQuery());
-        if (doc) {
-            await Quiz.deleteMany({ documentId: doc._id });
-            await Flashcard.deleteMany({ DocumentId: doc._id });
-        }
-        next();
-    } catch (err) {
-        next(err);
-    }
-});
-
-// Pre-hook for deleteOne - FIXED
-documentSchema.pre('deleteOne', async function(next) {
-    try {
-        const doc = this;
-        if (doc && doc._id) {
-            console.log(`Deleting related data for document ${doc._id}`);
-            await Quiz.deleteMany({ documentId: doc._id });
-            await Flashcard.deleteMany({ DocumentId: doc._id });
-        }
-        next();
-    } catch (err) {
-        console.error('Error in deleteOne pre-hook:', err);
-        next(err);
-    }
-});
-
-const Document = mongoose.model('Document', documentSchema);
-
 export default Document;
